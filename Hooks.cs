@@ -72,7 +72,7 @@ namespace DronesForAll
             On.Player.ctor += (orig, self, absCreat, world) =>
             {
                 orig(self, absCreat, world);
-                if (self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Slugpup)
+                if (!self.isSlugpup)
                 {
                     slugIndex = slugcatToIndex(self.slugcatStats.name);
                 }
@@ -83,7 +83,7 @@ namespace DronesForAll
             On.Player.UpdateMSC += (orig, self) =>
             {
                 orig(self);
-                if (self.room.game.session is StoryGameSession && self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Slugpup)
+                if (self.room.game.session is StoryGameSession && self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Slugpup && !self.isSlugpup)
                 {
                     if (self.room != null && (self.myRobot == null || self.myRobot.slatedForDeletetion) && self.AI == null && ((self.room.game.session as StoryGameSession).saveState.hasRobo ^ self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Artificer) && self.room.game.session is StoryGameSession && self.room.game.FirstAlivePlayer != null && self.room.game.FirstAlivePlayer.realizedCreature != null && self.room.game.FirstAlivePlayer.realizedCreature == self)
                     //if (self.room != null && !self.room.game.wasAnArtificerDream && self.room.game.session is StoryGameSession && ((self.AI == null && (self.room.game.session as StoryGameSession).saveState.hasRobo) || (self.AI != null && (self.playerState as PlayerNPCState).Drone)) && (self.myRobot == null || self.myRobot.slatedForDeletetion) && (!ModManager.CoopAvailable || (self.room.game.FirstAlivePlayer != null && self.room.game.FirstAlivePlayer.realizedCreature != null && self.room.game.FirstAlivePlayer.realizedCreature == self)))
