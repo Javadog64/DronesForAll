@@ -64,11 +64,13 @@ namespace DronesForAll
         }
 
         public static int slugIndex = 11;
+        
 
         public static void Apply()
         {
-            SSOracleBehavior bruh = null;
-            bool talking = false;
+            SSOracleBehavior pebblesOracle = null;
+            SlugcatStats.Name currentSlug = null;
+            Oracle.OracleID oracleID = null;
 
             _ = new Hook(typeof(RegionGate).GetProperty(nameof(RegionGate.MeetRequirement)).GetGetMethod(), RegionGate_MeetRequirement_get);
 
@@ -78,6 +80,8 @@ namespace DronesForAll
                 if (!self.isSlugpup)
                 {
                     slugIndex = slugcatToIndex(self.slugcatStats.name);
+                    currentSlug = self.slugcatStats.name;
+                    
                 }
                 
             };
@@ -132,52 +136,81 @@ namespace DronesForAll
                 
             };
 
+            On.Oracle.ctor += (orig, self, abstractPhysObj, room) =>
+            {
+                orig(self, abstractPhysObj, room);
+                oracleID = self.ID;
+            };
+
             On.SSOracleBehavior.SeePlayer += (orig, self) =>
             {
-                bruh = self;
-                if (self.oracle.ID == Oracle.OracleID.SS && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty && DroneOptions.usingDrone[slugIndex].Value)
+                pebblesOracle = self;
+                if(currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
                 {
-                    self.SlugcatEnterRoomReaction();
-                    self.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
-                    return;
+                    if (self.oracle.ID == Oracle.OracleID.SS && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty && DroneOptions.usingDrone[slugIndex].Value)
+                    {
+                        self.SlugcatEnterRoomReaction();
+                        self.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
+                        return;
+                    }
                 }
                 orig(self);
             };
 
             On.SSOracleBehavior.SSSleepoverBehavior.Update += (orig, self) =>
             {
-                var physicalObjects = self.oracle.room.physicalObjects;
-
-                foreach (var layer in physicalObjects)
+                UnityEngine.Debug.Log(currentSlug);
+                if(currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
                 {
-                    foreach (var physicalObject in layer)
+                    var physicalObjects = self.oracle.room.physicalObjects;
+
+                    foreach (var layer in physicalObjects)
                     {
-                        if(physicalObject.grabbedBy.Count == 0 && physicalObject is DataPearl && physicalObject is not PebblesPearl && talking == false)
+                        foreach (var physicalObject in layer)
                         {
-                            UnityEngine.Debug.Log("YEAH");
-                            var pearl = physicalObject as DataPearl;
-                            bruh.inspectPearl = physicalObject as DataPearl;
-                            //bruh.conversation.currentSaveFile = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
-                            bruh.StartItemConversation(physicalObject as DataPearl);
-                            bruh.readDataPearlOrbits.Add(pearl.AbstractPearl);
-                            talking = true;
+                            if (physicalObject.grabbedBy.Count == 0 && physicalObject is DataPearl && physicalObject is not PebblesPearl && !pebblesOracle.talkedAboutThisSession.Contains((physicalObject as DataPearl).abstractPhysicalObject.ID))
+                            {
+                                UnityEngine.Debug.Log("YEAH");
+                                var pearl = physicalObject as DataPearl;
+                                pebblesOracle.inspectPearl = physicalObject as DataPearl;
+                                //bruh.conversation.currentSaveFile = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
+                                pebblesOracle.StartItemConversation(physicalObject as DataPearl);
+                                //bruh.readDataPearlOrbits.Add(pearl.AbstractPearl);
+                                pebblesOracle.talkedAboutThisSession.Add(pearl.abstractPhysicalObject.ID);
+                            }
                         }
                     }
                 }
+                
                 orig(self);
 
             };
 
             On.Conversation.LoadEventsFromFile_int_Name_bool_int += (orig, self, whatever, slug, a, h) =>
             {
-                if (DroneOptions.usingDrone[slugIndex].Value)
+                if(currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
                 {
-                    slug = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
+                    if (DroneOptions.usingDrone[slugIndex].Value && oracleID == Oracle.OracleID.SS)
+                    {
+                        slug = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
+                    }
                 }
                 orig(self, whatever, slug, a, h);
                 
             };
 
+            On.OracleBehavior.AlreadyDiscussedItemString += (orig, self, pearl) => 
+            {
+                if(currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
+                {
+                    if (oracleID == Oracle.OracleID.SS && pearl)
+                    {
+                        return "Ah, something to read?";
+                    }
+                }
+                
+                return orig(self, pearl);
+            };
 
 
             IL.MoreSlugcats.AncientBot.InitiateSprites += AncientBot_InitiateSprites;
