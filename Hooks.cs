@@ -8,6 +8,7 @@ using Watcher;
 using System.Collections.Generic;
 using MonoMod.RuntimeDetour;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Runtime.CompilerServices;
 
 namespace DronesForAll
 {
@@ -66,6 +67,8 @@ namespace DronesForAll
 
         public static void Apply()
         {
+            SSOracleBehavior bruh = null;
+            bool talking = false;
 
             _ = new Hook(typeof(RegionGate).GetProperty(nameof(RegionGate.MeetRequirement)).GetGetMethod(), RegionGate_MeetRequirement_get);
 
@@ -129,22 +132,57 @@ namespace DronesForAll
                 
             };
 
-            On.SSOracleBehavior.Update += (orig, self, eu) =>
+            On.SSOracleBehavior.SeePlayer += (orig, self) =>
             {
-                if(self.oracle.ID == Oracle.OracleID.SS)
+                bruh = self;
+                if (self.oracle.ID == Oracle.OracleID.SS && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty && DroneOptions.usingDrone[slugIndex].Value)
                 {
-                    if (DroneOptions.noPebblesKill.Value && DroneOptions.usingDrone[slugcatToIndex(self.oracle.room.game.StoryCharacter)].Value && (self.action == SSOracleBehavior.Action.ThrowOut_ThrowOut || self.action == SSOracleBehavior.Action.ThrowOut_Polite_ThrowOut || self.action == SSOracleBehavior.Action.ThrowOut_SecondThrowOut || self.action == SSOracleBehavior.Action.ThrowOut_KillOnSight))
+                    self.SlugcatEnterRoomReaction();
+                    self.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
+                    return;
+                }
+                orig(self);
+            };
+
+            On.SSOracleBehavior.SSSleepoverBehavior.Update += (orig, self) =>
+            {
+                var physicalObjects = self.oracle.room.physicalObjects;
+
+                foreach (var layer in physicalObjects)
+                {
+                    foreach (var physicalObject in layer)
                     {
-                        self.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
+                        if(physicalObject.grabbedBy.Count == 0 && physicalObject is DataPearl && physicalObject is not PebblesPearl && talking == false)
+                        {
+                            UnityEngine.Debug.Log("YEAH");
+                            var pearl = physicalObject as DataPearl;
+                            bruh.inspectPearl = physicalObject as DataPearl;
+                            //bruh.conversation.currentSaveFile = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
+                            bruh.StartItemConversation(physicalObject as DataPearl);
+                            bruh.readDataPearlOrbits.Add(pearl.AbstractPearl);
+                            talking = true;
+                        }
                     }
                 }
-                
-                orig(self, eu);
+                orig(self);
+
             };
+
+            On.Conversation.LoadEventsFromFile_int_Name_bool_int += (orig, self, whatever, slug, a, h) =>
+            {
+                if (DroneOptions.usingDrone[slugIndex].Value)
+                {
+                    slug = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
+                }
+                orig(self, whatever, slug, a, h);
+                
+            };
+
 
 
             IL.MoreSlugcats.AncientBot.InitiateSprites += AncientBot_InitiateSprites;
             IL.MoreSlugcats.AncientBot.DrawSprites += AncientBot_DrawSprites;
+            //IL.SSOracleBehavior.Update += SSOracleBehavior_Update;
 
 
         }
@@ -170,6 +208,12 @@ namespace DronesForAll
         static bool wantToUseKingDrone()
         {
             return DroneOptions.kingDroneVars[slugIndex].Value;
+        }
+
+        static bool usingDrone()
+        {
+            //return DroneOptions.usingDrone[slugIndex].Value;
+            return true;
         }
 
         private static void AncientBot_InitiateSprites(ILContext il)
@@ -256,7 +300,35 @@ namespace DronesForAll
             }
         }
 
+        private static void SSOracleBehavior_Update(ILContext il)
+        {
+            try
+            {
+                ILCursor c = new ILCursor(il);
+                for (int i = 0; i < 2; i++)
+                {
+                    c.GotoNext(
+                    MoveType.After,
+                    x => x.MatchLdarg(0),
+                    x => x.MatchLdfld<SSOracleBehavior>(nameof(SSOracleBehavior.currSubBehavior)),
+                    x => x.MatchIsinst<SSOracleBehavior.ThrowOutBehavior>()
+                    );
+                }
+                c.MoveAfterLabels();
+                var jump4 = c.Next;
+                c.Index -= 6;
+                c.EmitDelegate(usingDrone);
+                c.Emit(OpCodes.Brtrue, jump4);
+                //c.Emit(OpCodes.Nop);
+                UnityEngine.Debug.Log(il);
 
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.Log("HELPPP");
+                UnityEngine.Debug.Log(e);
+            }
+        }
 
     }
 }
