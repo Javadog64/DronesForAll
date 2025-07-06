@@ -92,7 +92,7 @@ namespace DronesForAll
                 orig(self);
                 if (self.room.game.session is StoryGameSession && self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Slugpup && !self.isSlugpup)
                 {
-                    if (self.room != null && (self.myRobot == null || self.myRobot.slatedForDeletetion) && self.AI == null && ((self.room.game.session as StoryGameSession).saveState.hasRobo ^ self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Artificer) && self.room.game.session is StoryGameSession && self.room.game.FirstAlivePlayer != null && self.room.game.FirstAlivePlayer.realizedCreature != null && self.room.game.FirstAlivePlayer.realizedCreature == self)
+                    if (self.room != null && (self.myRobot == null || self.myRobot.slatedForDeletetion) && self.AI == null && ((self.room.game.session as StoryGameSession).saveState.hasRobo ^ self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Artificer) && self.room.game.session is StoryGameSession && self.room.game.FirstAlivePlayer != null && self.room.game.FirstAlivePlayer.realizedCreature != null && self.room.game.FirstAlivePlayer.realizedCreature == self && DroneOptions.usingDrone[slugIndex].Value)
                     //if (self.room != null && !self.room.game.wasAnArtificerDream && self.room.game.session is StoryGameSession && ((self.AI == null && (self.room.game.session as StoryGameSession).saveState.hasRobo) || (self.AI != null && (self.playerState as PlayerNPCState).Drone)) && (self.myRobot == null || self.myRobot.slatedForDeletetion) && (!ModManager.CoopAvailable || (self.room.game.FirstAlivePlayer != null && self.room.game.FirstAlivePlayer.realizedCreature != null && self.room.game.FirstAlivePlayer.realizedCreature == self)))
                     {
                         self.myRobot = new AncientBot(self.mainBodyChunk.pos, DroneOptions.eyeColors[slugIndex].Value, self, true);
@@ -105,7 +105,7 @@ namespace DronesForAll
             On.MoreSlugcats.AncientBot.ApplyPalette += (orig, self, sLeaser, rcam, pal) =>
             {
                 orig(self, sLeaser, rcam, pal);
-                if(self.tiedToObject is Player)
+                if(self.tiedToObject is Player && DroneOptions.usingDrone[slugIndex].Value)
                 {
                     for (int j = self.BodyIndex; j < self.LightBaseIndex; j++)
                     {
@@ -129,7 +129,7 @@ namespace DronesForAll
             On.MoreSlugcats.AncientBot.ctor += (orig, self, pos, color, rcam, pal) =>
             {
                 orig(self, pos, color, rcam, pal);
-                if(self.tiedToObject is Player) 
+                if(self.tiedToObject is Player && DroneOptions.usingDrone[slugIndex].Value) 
                 {
                     self.color = DroneOptions.eyeColors[slugIndex].Value;
                 }
