@@ -1,7 +1,7 @@
 {
   "id": "javadog.dronesforall",
   "name": "Drones For All",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "authors": "Javadog",
   "description": "Gives all slugcats citizen ID drones<LINE>Change the drones appearance via the Remix config",
   "requirements": [ "moreslugcats" ],

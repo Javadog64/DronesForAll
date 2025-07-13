@@ -142,24 +142,59 @@ namespace DronesForAll
                 oracleID = self.ID;
             };
 
+            On.SSOracleBehavior.Update += (orig, self, eu) =>
+            {
+                //UnityEngine.Debug.Log(self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad);
+                //if (self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad <= 0 && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty)
+                //{
+                //    self.NewAction(SSOracleBehavior.Action.General_Idle);
+                //}
+                orig(self, eu);
+                self.killFac = 0f;
+            };
+
+            
+
+
             On.SSOracleBehavior.SeePlayer += (orig, self) =>
             {
                 pebblesOracle = self;
-                if(currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
+                if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
                 {
                     if (self.oracle.ID == Oracle.OracleID.SS && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty && DroneOptions.usingDrone[slugIndex].Value)
                     {
-                        self.SlugcatEnterRoomReaction();
-                        self.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
-                        return;
+                        if(currentSlug == MoreSlugcatsEnums.SlugcatStatsName.Spear && self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad <= 0)
+                        {
+                            orig(self);
+                        }
+                        else
+                        {
+                            self.SlugcatEnterRoomReaction();
+                            self.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
+                            return;
+                        }
+                        
                     }
                 }
                 orig(self);
             };
 
+            //On.SSOracleBehavior.ThrowOutBehavior.Activate += (orig, self, oldAct, newAct) =>
+            //{
+            //    if (self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad >= 1 && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty)
+            //    {
+            //        UnityEngine.Debug.Log("BLAH");
+            //        pebblesOracle.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
+            //    }
+            //    else
+            //    {
+            //        orig(self, oldAct, newAct);
+            //    }
+            //};
+
             On.SSOracleBehavior.SSSleepoverBehavior.Update += (orig, self) =>
             {
-                UnityEngine.Debug.Log(currentSlug);
+                //UnityEngine.Debug.Log(currentSlug);
                 if(currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
                 {
                     var physicalObjects = self.oracle.room.physicalObjects;
