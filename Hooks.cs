@@ -17,6 +17,7 @@ namespace DronesForAll
         private static int slugcatToIndex(SlugcatStats.Name slug)
         {
             
+
             if(slug == SlugcatStats.Name.Yellow)
             {
                 return 1;
@@ -64,196 +65,194 @@ namespace DronesForAll
         }
 
         public static int slugIndex = 11;
-        
+        private static SSOracleBehavior pebblesOracle = null;
+        private static SlugcatStats.Name currentSlug = null;
+        private static Oracle.OracleID oracleID = null;
+
 
         public static void Apply()
         {
-            SSOracleBehavior pebblesOracle = null;
-            SlugcatStats.Name currentSlug = null;
-            Oracle.OracleID oracleID = null;
+            
 
             _ = new Hook(typeof(RegionGate).GetProperty(nameof(RegionGate.MeetRequirement)).GetGetMethod(), RegionGate_MeetRequirement_get);
 
-            On.Player.ctor += (orig, self, absCreat, world) =>
-            {
-                orig(self, absCreat, world);
-                if (!self.isSlugpup)
-                {
-                    slugIndex = slugcatToIndex(self.slugcatStats.name);
-                    currentSlug = self.slugcatStats.name;
-                    
-                }
-                
-            };
 
-
-            On.Player.UpdateMSC += (orig, self) =>
-            {
-                orig(self);
-                if (self.room.game.session is StoryGameSession && self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Slugpup && !self.isSlugpup)
-                {
-                    if (self.room != null && (self.myRobot == null || self.myRobot.slatedForDeletetion) && self.AI == null && ((self.room.game.session as StoryGameSession).saveState.hasRobo ^ self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Artificer) && self.room.game.session is StoryGameSession && self.room.game.FirstAlivePlayer != null && self.room.game.FirstAlivePlayer.realizedCreature != null && self.room.game.FirstAlivePlayer.realizedCreature == self && DroneOptions.usingDrone[slugIndex].Value)
-                    //if (self.room != null && !self.room.game.wasAnArtificerDream && self.room.game.session is StoryGameSession && ((self.AI == null && (self.room.game.session as StoryGameSession).saveState.hasRobo) || (self.AI != null && (self.playerState as PlayerNPCState).Drone)) && (self.myRobot == null || self.myRobot.slatedForDeletetion) && (!ModManager.CoopAvailable || (self.room.game.FirstAlivePlayer != null && self.room.game.FirstAlivePlayer.realizedCreature != null && self.room.game.FirstAlivePlayer.realizedCreature == self)))
-                    {
-                        self.myRobot = new AncientBot(self.mainBodyChunk.pos, DroneOptions.eyeColors[slugIndex].Value, self, true);
-                        self.room.AddObject(self.myRobot);
-                    }
-                }
-                    
-            };
-
-            On.MoreSlugcats.AncientBot.ApplyPalette += (orig, self, sLeaser, rcam, pal) =>
-            {
-                orig(self, sLeaser, rcam, pal);
-                if(self.tiedToObject is Player && DroneOptions.usingDrone[slugIndex].Value)
-                {
-                    for (int j = self.BodyIndex; j < self.LightBaseIndex; j++)
-                    {
-                        if (j == self.LeftAntIndex + 1 || j == self.RightAntIndex + 1)
-                        {
-                            sLeaser.sprites[j].color = DroneOptions.antColors[slugIndex].Value;
-                        }
-                        else if (j == self.BodyIndex)
-                        {
-                            sLeaser.sprites[j].color = DroneOptions.bottomColors[slugIndex].Value;
-                        }
-                        else
-                        {
-                            sLeaser.sprites[j].color = DroneOptions.bodyColors[slugIndex].Value;
-                        }
-                    }
-                }
-                
-            };
-
-            On.MoreSlugcats.AncientBot.ctor += (orig, self, pos, color, rcam, pal) =>
-            {
-                orig(self, pos, color, rcam, pal);
-                if(self.tiedToObject is Player && DroneOptions.usingDrone[slugIndex].Value) 
-                {
-                    self.color = DroneOptions.eyeColors[slugIndex].Value;
-                }
-                
-            };
-
-            On.Oracle.ctor += (orig, self, abstractPhysObj, room) =>
-            {
-                orig(self, abstractPhysObj, room);
-                oracleID = self.ID;
-            };
-
-            On.SSOracleBehavior.Update += (orig, self, eu) =>
-            {
-                //UnityEngine.Debug.Log(self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad);
-                //if (self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad <= 0 && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty)
-                //{
-                //    self.NewAction(SSOracleBehavior.Action.General_Idle);
-                //}
-                orig(self, eu);
-                self.killFac = 0f;
-            };
-
-            
-
-
-            On.SSOracleBehavior.SeePlayer += (orig, self) =>
-            {
-                pebblesOracle = self;
-                if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
-                {
-                    if (self.oracle.ID == Oracle.OracleID.SS && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty && DroneOptions.usingDrone[slugIndex].Value)
-                    {
-                        if(currentSlug == MoreSlugcatsEnums.SlugcatStatsName.Spear && self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad <= 0)
-                        {
-                            orig(self);
-                        }
-                        else
-                        {
-                            self.SlugcatEnterRoomReaction();
-                            self.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
-                            return;
-                        }
-                        
-                    }
-                }
-                orig(self);
-            };
-
-            //On.SSOracleBehavior.ThrowOutBehavior.Activate += (orig, self, oldAct, newAct) =>
-            //{
-            //    if (self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad >= 1 && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty)
-            //    {
-            //        UnityEngine.Debug.Log("BLAH");
-            //        pebblesOracle.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
-            //    }
-            //    else
-            //    {
-            //        orig(self, oldAct, newAct);
-            //    }
-            //};
-
-            On.SSOracleBehavior.SSSleepoverBehavior.Update += (orig, self) =>
-            {
-                //UnityEngine.Debug.Log(currentSlug);
-                if(currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
-                {
-                    var physicalObjects = self.oracle.room.physicalObjects;
-
-                    foreach (var layer in physicalObjects)
-                    {
-                        foreach (var physicalObject in layer)
-                        {
-                            if (physicalObject.grabbedBy.Count == 0 && physicalObject is DataPearl && physicalObject is not PebblesPearl && !pebblesOracle.talkedAboutThisSession.Contains((physicalObject as DataPearl).abstractPhysicalObject.ID))
-                            {
-                                UnityEngine.Debug.Log("YEAH");
-                                var pearl = physicalObject as DataPearl;
-                                pebblesOracle.inspectPearl = physicalObject as DataPearl;
-                                //bruh.conversation.currentSaveFile = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
-                                pebblesOracle.StartItemConversation(physicalObject as DataPearl);
-                                //bruh.readDataPearlOrbits.Add(pearl.AbstractPearl);
-                                pebblesOracle.talkedAboutThisSession.Add(pearl.abstractPhysicalObject.ID);
-                            }
-                        }
-                    }
-                }
-                
-                orig(self);
-
-            };
-
-            On.Conversation.LoadEventsFromFile_int_Name_bool_int += (orig, self, whatever, slug, a, h) =>
-            {
-                if(currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
-                {
-                    if (DroneOptions.usingDrone[slugIndex].Value && oracleID == Oracle.OracleID.SS)
-                    {
-                        slug = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
-                    }
-                }
-                orig(self, whatever, slug, a, h);
-                
-            };
-
-            On.OracleBehavior.AlreadyDiscussedItemString += (orig, self, pearl) => 
-            {
-                if(currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
-                {
-                    if (oracleID == Oracle.OracleID.SS && pearl)
-                    {
-                        return "Ah, something to read?";
-                    }
-                }
-                
-                return orig(self, pearl);
-            };
-
-
+            On.Player.ctor += Player_ctor;
+            On.Player.UpdateMSC += Player_UpdateMSC;
+            On.MoreSlugcats.AncientBot.ApplyPalette += MoreSlugcats_AncientBot_ApplyPalette;
+            On.MoreSlugcats.AncientBot.ctor += MoreSlugcats_AncientBot_ctor;
+            On.Oracle.ctor += Oracle_ctor;
+            On.SSOracleBehavior.Update += SSOracleBehavior_Update;
+            On.SSOracleBehavior.SeePlayer += SSOracleBehavior_SeePlayer;
+            On.SSOracleBehavior.SSSleepoverBehavior.Update += SSOracleBehavior_SSSleepoverBehavior_Update;
+            On.Conversation.LoadEventsFromFile_int_Name_bool_int += Conversation_LoadEventsFromFile_int_Name_bool_int;
+            On.OracleBehavior.AlreadyDiscussedItemString += OracleBehavior_AlreadyDiscussedItemString;
             IL.MoreSlugcats.AncientBot.InitiateSprites += AncientBot_InitiateSprites;
             IL.MoreSlugcats.AncientBot.DrawSprites += AncientBot_DrawSprites;
             //IL.SSOracleBehavior.Update += SSOracleBehavior_Update;
 
 
         }
+
+        private static void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature absCreat, World world)
+        {
+            orig(self, absCreat, world);
+            if (!self.isSlugpup)
+            {
+                slugIndex = slugcatToIndex(self.slugcatStats.name);
+                currentSlug = self.slugcatStats.name;
+
+            }
+        }
+
+
+        private static void Player_UpdateMSC(On.Player.orig_UpdateMSC orig, Player self)
+        {
+            orig(self);
+            if (self.room.game.session is StoryGameSession && self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Slugpup && !self.isSlugpup)
+            {
+                if (self.room != null && (self.myRobot == null || self.myRobot.slatedForDeletetion) && self.AI == null && ((self.room.game.session as StoryGameSession).saveState.hasRobo ^ self.slugcatStats.name != MoreSlugcatsEnums.SlugcatStatsName.Artificer) && self.room.game.session is StoryGameSession && self.room.game.FirstAlivePlayer != null && self.room.game.FirstAlivePlayer.realizedCreature != null && self.room.game.FirstAlivePlayer.realizedCreature == self && DroneOptions.usingDrone[slugIndex].Value)
+                //if (self.room != null && !self.room.game.wasAnArtificerDream && self.room.game.session is StoryGameSession && ((self.AI == null && (self.room.game.session as StoryGameSession).saveState.hasRobo) || (self.AI != null && (self.playerState as PlayerNPCState).Drone)) && (self.myRobot == null || self.myRobot.slatedForDeletetion) && (!ModManager.CoopAvailable || (self.room.game.FirstAlivePlayer != null && self.room.game.FirstAlivePlayer.realizedCreature != null && self.room.game.FirstAlivePlayer.realizedCreature == self)))
+                {
+                    self.myRobot = new AncientBot(self.mainBodyChunk.pos, DroneOptions.eyeColors[slugIndex].Value, self, true);
+                    self.room.AddObject(self.myRobot);
+                }
+            }
+        }
+
+
+        private static void MoreSlugcats_AncientBot_ApplyPalette(On.MoreSlugcats.AncientBot.orig_ApplyPalette orig, MoreSlugcats.AncientBot self, RoomCamera.SpriteLeaser sLeaser,RoomCamera rcam, RoomPalette pal)
+        {
+            orig(self, sLeaser, rcam, pal);
+            if (self.tiedToObject is Player && DroneOptions.usingDrone[slugIndex].Value)
+            {
+                for (int j = self.BodyIndex; j < self.LightBaseIndex; j++)
+                {
+                    if (j == self.LeftAntIndex + 1 || j == self.RightAntIndex + 1)
+                    {
+                        sLeaser.sprites[j].color = DroneOptions.antColors[slugIndex].Value;
+                    }
+                    else if (j == self.BodyIndex)
+                    {
+                        sLeaser.sprites[j].color = DroneOptions.bottomColors[slugIndex].Value;
+                    }
+                    else
+                    {
+                        sLeaser.sprites[j].color = DroneOptions.bodyColors[slugIndex].Value;
+                    }
+                }
+            }
+        }
+
+
+        private static void MoreSlugcats_AncientBot_ctor(On.MoreSlugcats.AncientBot.orig_ctor orig, MoreSlugcats.AncientBot self, UnityEngine.Vector2 pos, UnityEngine.Color color, Creature rcam, bool pal)
+        {
+            orig(self, pos, color, rcam, pal);
+            if (self.tiedToObject is Player && DroneOptions.usingDrone[slugIndex].Value)
+            {
+                self.color = DroneOptions.eyeColors[slugIndex].Value;
+            }
+        }
+
+
+        private static void Oracle_ctor(On.Oracle.orig_ctor orig, Oracle self, AbstractPhysicalObject abstractPhysObj, Room room)
+        {
+            orig(self, abstractPhysObj, room);
+            oracleID = self.ID;
+        }
+
+
+        private static void SSOracleBehavior_Update(On.SSOracleBehavior.orig_Update orig, SSOracleBehavior self, bool eu)
+        {
+            //UnityEngine.Debug.Log(self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad);
+            //if (self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad <= 0 && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty)
+            //{
+            //    self.NewAction(SSOracleBehavior.Action.General_Idle);
+            //}
+            orig(self, eu);
+            self.killFac = 0f;
+        }
+
+
+        private static void SSOracleBehavior_SeePlayer(On.SSOracleBehavior.orig_SeePlayer orig, SSOracleBehavior self)
+        {
+            pebblesOracle = self;
+            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
+            {
+                if (self.oracle.ID == Oracle.OracleID.SS && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty && DroneOptions.usingDrone[slugIndex].Value)
+                {
+                    if (currentSlug == MoreSlugcatsEnums.SlugcatStatsName.Spear && self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad <= 0)
+                    {
+                        orig(self);
+                    }
+                    else
+                    {
+                        self.SlugcatEnterRoomReaction();
+                        self.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
+                        return;
+                    }
+
+                }
+            }
+            orig(self);
+        }
+
+
+        private static void SSOracleBehavior_SSSleepoverBehavior_Update(On.SSOracleBehavior.SSSleepoverBehavior.orig_Update orig, SSOracleBehavior.SSSleepoverBehavior self)
+        {
+            //UnityEngine.Debug.Log(currentSlug);
+            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
+            {
+                var physicalObjects = self.oracle.room.physicalObjects;
+
+                foreach (var layer in physicalObjects)
+                {
+                    foreach (var physicalObject in layer)
+                    {
+                        if (physicalObject.grabbedBy.Count == 0 && physicalObject is DataPearl && physicalObject is not PebblesPearl && !pebblesOracle.talkedAboutThisSession.Contains((physicalObject as DataPearl).abstractPhysicalObject.ID))
+                        {
+                            UnityEngine.Debug.Log("YEAH");
+                            var pearl = physicalObject as DataPearl;
+                            pebblesOracle.inspectPearl = physicalObject as DataPearl;
+                            //bruh.conversation.currentSaveFile = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
+                            pebblesOracle.StartItemConversation(physicalObject as DataPearl);
+                            //bruh.readDataPearlOrbits.Add(pearl.AbstractPearl);
+                            pebblesOracle.talkedAboutThisSession.Add(pearl.abstractPhysicalObject.ID);
+                        }
+                    }
+                }
+            }
+
+            orig(self);
+        }
+
+
+        private static void Conversation_LoadEventsFromFile_int_Name_bool_int(On.Conversation.orig_LoadEventsFromFile_int_Name_bool_int orig, Conversation self, int whatever, SlugcatStats.Name slug, bool a, int h)
+        {
+            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
+            {
+                if (DroneOptions.usingDrone[slugIndex].Value && oracleID == Oracle.OracleID.SS)
+                {
+                    slug = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
+                }
+            }
+            orig(self, whatever, slug, a, h);
+        }
+
+
+        private static string OracleBehavior_AlreadyDiscussedItemString(On.OracleBehavior.orig_AlreadyDiscussedItemString orig, OracleBehavior self, bool pearl)
+        {
+            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
+            {
+                if (oracleID == Oracle.OracleID.SS && pearl)
+                {
+                    return "Ah, something to read?";
+                }
+            }
+
+            return orig(self, pearl);
+        }
+
 
         private static bool RegionGate_MeetRequirement_get(Func<RegionGate, bool> orig, RegionGate self) 
         {
@@ -272,6 +271,20 @@ namespace DronesForAll
             return orig(self);
 
         }
+
+        //On.SSOracleBehavior.ThrowOutBehavior.Activate += (orig, self, oldAct, newAct) =>
+        //{
+        //    if (self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad >= 1 && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty)
+        //    {
+        //        UnityEngine.Debug.Log("BLAH");
+        //        pebblesOracle.NewAction(MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty);
+        //    }
+        //    else
+        //    {
+        //        orig(self, oldAct, newAct);
+        //    }
+        //};
+
 
         static bool wantToUseKingDrone()
         {
@@ -308,6 +321,7 @@ namespace DronesForAll
                 UnityEngine.Debug.Log(e);
             }
         }
+
 
         private static void AncientBot_DrawSprites(ILContext il)
         {
