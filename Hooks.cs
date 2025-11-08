@@ -177,7 +177,7 @@ namespace DronesForAll
         private static void SSOracleBehavior_SeePlayer(On.SSOracleBehavior.orig_SeePlayer orig, SSOracleBehavior self)
         {
             pebblesOracle = self;
-            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
+            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer && (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Saint && self.player.room.world.region.name == "HR"))
             {
                 if (self.oracle.ID == Oracle.OracleID.SS && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty && DroneOptions.usingDrone[slugIndex].Value)
                 {
@@ -201,7 +201,7 @@ namespace DronesForAll
         private static void SSOracleBehavior_SSSleepoverBehavior_Update(On.SSOracleBehavior.SSSleepoverBehavior.orig_Update orig, SSOracleBehavior.SSSleepoverBehavior self)
         {
             //UnityEngine.Debug.Log(currentSlug);
-            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer)
+            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer && (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Saint && self.player.room.world.region.name == "HR"))
             {
                 var physicalObjects = self.oracle.room.physicalObjects;
 
@@ -399,6 +399,7 @@ namespace DronesForAll
                 c.MoveAfterLabels();
                 var jump4 = c.Next;
                 c.Index -= 6;
+                c.EmitDelegate(usingDrone);
                 c.EmitDelegate(usingDrone);
                 c.Emit(OpCodes.Brtrue, jump4);
                 //c.Emit(OpCodes.Nop);
