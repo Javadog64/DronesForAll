@@ -177,9 +177,9 @@ namespace DronesForAll
         private static void SSOracleBehavior_SeePlayer(On.SSOracleBehavior.orig_SeePlayer orig, SSOracleBehavior self)
         {
             pebblesOracle = self;
-            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer && (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Saint && self.player.room.world.region.name == "HR"))
+            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer && (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Saint && self.player.room.world.region.name != "HR"))
             {
-                if (self.oracle.ID == Oracle.OracleID.SS && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty && DroneOptions.usingDrone[slugIndex].Value)
+                if (self.oracle.ID == Oracle.OracleID.SS && self.action != MoreSlugcatsEnums.SSOracleBehaviorAction.Pebbles_SlumberParty && DroneOptions.usingDrone[slugIndex].Value && DroneOptions.noPebblesKill.Value)
                 {
                     if (currentSlug == MoreSlugcatsEnums.SlugcatStatsName.Spear && self.oracle.room.game.GetStorySession.saveState.miscWorldSaveData.SSaiConversationsHad <= 0)
                     {
@@ -201,23 +201,26 @@ namespace DronesForAll
         private static void SSOracleBehavior_SSSleepoverBehavior_Update(On.SSOracleBehavior.SSSleepoverBehavior.orig_Update orig, SSOracleBehavior.SSSleepoverBehavior self)
         {
             //UnityEngine.Debug.Log(currentSlug);
-            if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer && (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Saint && self.player.room.world.region.name == "HR"))
+            if (self.player != null)
             {
-                var physicalObjects = self.oracle.room.physicalObjects;
-
-                foreach (var layer in physicalObjects)
+                if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer && (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Saint && self.player.room.world.region.name != "HR"))
                 {
-                    foreach (var physicalObject in layer)
+                    var physicalObjects = self.oracle.room.physicalObjects;
+
+                    foreach (var layer in physicalObjects)
                     {
-                        if (physicalObject.grabbedBy.Count == 0 && physicalObject is DataPearl && physicalObject is not PebblesPearl && !pebblesOracle.talkedAboutThisSession.Contains((physicalObject as DataPearl).abstractPhysicalObject.ID))
+                        foreach (var physicalObject in layer)
                         {
-                            UnityEngine.Debug.Log("YEAH");
-                            var pearl = physicalObject as DataPearl;
-                            pebblesOracle.inspectPearl = physicalObject as DataPearl;
-                            //bruh.conversation.currentSaveFile = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
-                            pebblesOracle.StartItemConversation(physicalObject as DataPearl);
-                            //bruh.readDataPearlOrbits.Add(pearl.AbstractPearl);
-                            pebblesOracle.talkedAboutThisSession.Add(pearl.abstractPhysicalObject.ID);
+                            if (physicalObject.grabbedBy.Count == 0 && physicalObject is DataPearl && physicalObject is not PebblesPearl && !pebblesOracle.talkedAboutThisSession.Contains((physicalObject as DataPearl).abstractPhysicalObject.ID) && physicalObject != null)
+                            {
+                                UnityEngine.Debug.Log("YEAH");
+                                var pearl = physicalObject as DataPearl;
+                                pebblesOracle.inspectPearl = physicalObject as DataPearl;
+                                //bruh.conversation.currentSaveFile = MoreSlugcatsEnums.SlugcatStatsName.Artificer;
+                                pebblesOracle.StartItemConversation(physicalObject as DataPearl);
+                                //bruh.readDataPearlOrbits.Add(pearl.AbstractPearl);
+                                pebblesOracle.talkedAboutThisSession.Add(pearl.abstractPhysicalObject.ID);
+                            }
                         }
                     }
                 }
