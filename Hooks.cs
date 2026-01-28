@@ -203,7 +203,7 @@ namespace DronesForAll
             //UnityEngine.Debug.Log(currentSlug);
             if (self.player != null)
             {
-                if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer && (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Saint && self.player.room.world.region.name != "HR"))
+                if (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Artificer && (currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Saint && self.player.room.world.region.name != "HR") && self.oracle.ID != Oracle.OracleID.SL && currentSlug != MoreSlugcatsEnums.SlugcatStatsName.Spear)
                 {
                     var physicalObjects = self.oracle.room.physicalObjects;
 
