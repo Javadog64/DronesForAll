@@ -14,7 +14,7 @@ using On;
 
 namespace DronesForAll;
 
-[BepInPlugin("javadog.dronesforall", "Javadog", "1.1.8")]
+[BepInPlugin("javadog.dronesforall", "Javadog", "1.1.9")]
 public partial class DronesForAll : BaseUnityPlugin
 {
     public static OptionInterface LoadOI() => new DroneOptions();

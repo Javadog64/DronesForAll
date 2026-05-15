@@ -1,6 +1,6 @@
 {"frames": {
 
-"body.png":
+"artibody.png":
 {
 	"frame": {"x":0,"y":0,"w":19,"h":24},
 	"rotated": false,
@@ -8,7 +8,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":19,"h":24},
 	"sourceSize": {"w":19,"h":24}
 },
-"bottom.png":
+"artibottom.png":
 {
 	"frame": {"x":19,"y":0,"w":19,"h":24},
 	"rotated": false,
@@ -16,7 +16,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":19,"h":24},
 	"sourceSize": {"w":19,"h":24}
 },
-"edge.png":
+"artiedge.png":
 {
 	"frame": {"x":38,"y":0,"w":19,"h":24},
 	"rotated": false,
@@ -24,7 +24,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":19,"h":24},
 	"sourceSize": {"w":19,"h":24}
 },
-"eye.png":
+"artieye.png":
 {
 	"frame": {"x":57,"y":0,"w":19,"h":24},
 	"rotated": false,
